@@ -1,3 +1,6 @@
+# Creating a model that predicts crop yields for apples and oranges (target variables)
+# by looking at the average temperature, rainfall, and humidity (input variables or features)
+
 import numpy as np
 import torch
 import torch.nn as nn

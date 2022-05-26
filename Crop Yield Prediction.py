@@ -25,16 +25,11 @@ b = torch.randn(2, requires_grad=True)
 #model
 def model(x):
     return x @ w.t() + b
-#pred = model(inputs)
 
 #mse
 def mse(t1, t2):
     diff = t1-t2
     return torch.sum(diff*diff) / diff.numel()
-#loss = mse(pred, targets)
-
-#Gradient
-#loss.backward()
 
 #Adjust weights and biases
 
