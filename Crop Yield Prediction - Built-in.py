@@ -49,25 +49,24 @@ batch_size = 5
 train_dl = DataLoader(train_ds, batch_size, shuffle=True)
 
 model = nn.Linear(3,2)
-
-loss_fn = F.mse_loss
-
-opt = torch.optim.SGD(model.parameters(), lr=1e-5)
+for xb, yb in train_dl:
+    print(xb.shape)
 
 # Utility function to train the model
-def fit(num_epochs, model, loss_fn, opt, train_dl):
+def fit(epochs, model, train_dl):
+    opt = torch.optim.SGD(model.parameters(), lr=1e-5)
     
     # Repeat for given number of epochs
-    for epoch in range(num_epochs):
+    for epoch in range(epochs):
         
         # Train with batches of data
         for xb,yb in train_dl:
             
             # 1. Generate predictions
-            pred = model(xb)
+            out = model(xb)
             
             # 2. Calculate loss
-            loss = loss_fn(pred, yb)
+            loss = F.mse_loss(out, yb)
             
             # 3. Compute gradients
             loss.backward()
@@ -79,11 +78,11 @@ def fit(num_epochs, model, loss_fn, opt, train_dl):
             opt.zero_grad()
         
         # Print the progress
-        if (epoch+1) % 100 == 0:
-            print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))
+        # if (epoch+1) % 100 == 0:
+        #     print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epochs, loss.item()))
 
-fit(1000, model, loss_fn, opt, train_dl)
+fit(1000, model, train_dl)
 
 preds = model(inputs)
 
-print(preds)
+#print(preds)
