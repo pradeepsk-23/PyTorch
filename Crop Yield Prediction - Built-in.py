@@ -53,43 +53,31 @@ batch_size = 5
 train_dl = DataLoader(train_ds, batch_size, shuffle=True)
 
 #Linear Regression Model
-model = nn.Linear(3,2)
+input_size = 3
+output_size = 2
+model = nn.Linear(input_size, output_size)
 
 # Loss and Optimiser
 loss_fn = F.mse_loss
 opt = torch.optim.SGD(model.parameters(), lr=1e-5)
 
 # Train the model
-def fit(epochs, model, loss_fn, opt, train_dl):
+epochs = 1000
+total_step = len(train_dl)
+for epoch in range(epochs):
+    for i, (inputs, targets) in enumerate(train_dl):
 
-    # Repeat for given number of epochs
-    for epoch in range(epochs):
+        ## Forward Pass
+        outputs = model(inputs)
+        loss = loss_fn(outputs, targets)
 
-    # Train with batches of data
-        for inputs, targets in train_dl:
-            
-            ## Forward Pass
-            # 1. Generate predictions
-            outputs = model(inputs)
-            
-            # 2. Calculate loss
-            loss = loss_fn(outputs, targets)
-            
-            ## Backward and Optimize
-            # 3. Compute gradients
-            loss.backward()
-            
-            # 4. Update parameters using gradients
-            opt.step()
-            
-            # 5. Reset the gradients to zero
-            opt.zero_grad()
-        
-        # Print the progress
-        if (epoch+1) % 100 == 0:
-            print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epochs, loss.item()))
+        ## Backward and Optimize
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+    
+        # if (epoch+1) % 100 == 0:
+        #     print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epochs, loss.item()))
 
-fit(1000, model, loss_fn, opt, train_dl)
-
-preds = model(inputs)
-print(preds)
+# Save the model checkpoint
+torch.save(model.state_dict(), 'cyp_bi.ckpt')
