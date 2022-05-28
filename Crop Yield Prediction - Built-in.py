@@ -41,33 +41,41 @@ targets = np.array([[56, 70],
                     [20, 38], 
                     [102, 120]], dtype='float32')
 
+# Numpy to Torch tensor conversion
 inputs = torch.from_numpy(inputs)
 targets = torch.from_numpy(targets)
 
+# Dataset
 train_ds = TensorDataset(inputs, targets)
+
+# DataLoader
 batch_size = 5
 train_dl = DataLoader(train_ds, batch_size, shuffle=True)
 
+#Linear Regression Model
 model = nn.Linear(3,2)
-for xb, yb in train_dl:
-    print(xb.shape)
 
-# Utility function to train the model
-def fit(epochs, model, train_dl):
-    opt = torch.optim.SGD(model.parameters(), lr=1e-5)
-    
+# Loss and Optimiser
+loss_fn = F.mse_loss
+opt = torch.optim.SGD(model.parameters(), lr=1e-5)
+
+# Train the model
+def fit(epochs, model, loss_fn, opt, train_dl):
+
     # Repeat for given number of epochs
     for epoch in range(epochs):
-        
-        # Train with batches of data
-        for xb,yb in train_dl:
+
+    # Train with batches of data
+        for inputs, targets in train_dl:
             
+            ## Forward Pass
             # 1. Generate predictions
-            out = model(xb)
+            outputs = model(inputs)
             
             # 2. Calculate loss
-            loss = F.mse_loss(out, yb)
+            loss = loss_fn(outputs, targets)
             
+            ## Backward and Optimize
             # 3. Compute gradients
             loss.backward()
             
@@ -78,11 +86,10 @@ def fit(epochs, model, train_dl):
             opt.zero_grad()
         
         # Print the progress
-        # if (epoch+1) % 100 == 0:
-        #     print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epochs, loss.item()))
+        if (epoch+1) % 100 == 0:
+            print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epochs, loss.item()))
 
-fit(1000, model, train_dl)
+fit(1000, model, loss_fn, opt, train_dl)
 
 preds = model(inputs)
-
-#print(preds)
+print(preds)
