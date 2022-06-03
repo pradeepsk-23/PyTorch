@@ -59,7 +59,7 @@ with torch.no_grad():
         total += labels.size(0)
         correct += (predicted == labels).sum()
 
-    print('Accuracy of the model on the 10000 test images: {} %'.format(100 * correct / total))
+    print('Accuracy of the model on the test images: {} %'.format(100 * correct / total))
 
 # Save the model checkpoint
 torch.save(model.state_dict(), 'mnist_lr.ckpt')
