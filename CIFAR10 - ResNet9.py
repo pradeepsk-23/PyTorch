@@ -1,0 +1,113 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision.transforms as transforms
+
+from torchvision.datasets import CIFAR10
+from torch.utils.data import DataLoader
+
+# Device configuration
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# Image preprocessing modules
+transform = transforms.Compose([transforms.RandomCrop(size=32, padding=4, padding_mode="reflect"),
+                                transforms.RandomHorizontalFlip(),
+                                transforms.RandomPerspective(),
+                                transforms.RandomResizedCrop(size=32, scale=(0.5, 0.9), ratio=(1, 1)),
+                                transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),
+                                transforms.ToTensor()])
+
+# CIFAR10 dataset (images and labels)
+train_dataset = CIFAR10(root='Data/CIFAR10_Augmented', train=True, transform=transform, download=True)
+
+test_dataset = CIFAR10(root='Data/CIFAR10', train=False, transform=transforms.ToTensor())
+
+# DataLoader (input pipeline)
+batch_size = 100
+train_dl = DataLoader(train_dataset, batch_size, shuffle=True)
+test_dl = DataLoader(test_dataset, batch_size)
+
+# Convolution block
+def conv_block(in_channels, out_channels, pool=False):
+    layers = [nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+              nn.BatchNorm2d(out_channels),
+              nn.ReLU(inplace=True)]
+    if pool: layers.append(nn.MaxPool2d(2))
+    return nn.Sequential(*layers)
+
+# ResNet9
+in_channels = 3
+num_classes = 10
+class ResNet9(nn.Module):
+    def __init__(self, in_channels, num_classes):
+        super().__init__()
+
+        self.conv1 = conv_block(in_channels, 64) # out = [64, 32, 32]
+        self.conv2 = conv_block(64, 128, pool=True) # out = [128, 16, 16]
+        self.res1 = nn.Sequential(conv_block(128, 128),
+                                  conv_block(128, 128)) # out = [128, 16, 16]
+
+        self.conv3 = conv_block(128, 256, pool=True) # out = [256, 8, 8]
+        self.conv4 = conv_block(256, 512, pool=True) # out = [512, 4, 4]
+        self.res2 = nn.Sequential(conv_block(512, 512),
+                                  conv_block(512, 512)) # out = [512, 4, 4] 
+
+        self.classifier = nn.Sequential(nn.MaxPool2d(4), # out = [512, 1, 1]
+                                        nn.Flatten(),
+                                        nn.Dropout(p=0.2),
+                                        nn.Linear(512*1*1, num_classes))
+    
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.res1(out) + out
+        out = self.conv3(out)
+        out = self.conv4(out)
+        out = self.res2(out) + out
+        out = self.classifier(out)
+        return out
+
+# Model
+model = ResNet9(in_channels, num_classes).to(device)
+
+# Loss and optimizer
+# F.cross_entropy computes softmax internally
+loss_fn = F.cross_entropy
+opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=0.1)
+
+# Train the model
+epochs = 5
+total_step = len(train_dl)  
+curr_lr = 1e-3
+for epoch in range(epochs):
+    for i, (images, labels) in enumerate(train_dl):
+        images = images.to(device)
+        labels = labels.to(device)
+        
+        # Forward pass
+        outputs = model(images)
+        loss = loss_fn(outputs, labels)
+        
+        # Backward and optimize
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        
+        if (i+1) % 500 == 0:
+            print ("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}"
+                   .format(epoch+1, epochs, i+1, total_step, loss.item()))
+
+# Test the model
+model.eval()          # Turns off dropout and batchnorm layers for testing / validation.
+with torch.no_grad(): # In test phase, we don't need to compute gradients (for memory efficiency)
+    correct = 0
+    total = 0
+    for images, labels in test_dl:
+        images = images.to(device)
+        labels = labels.to(device)
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+
+    print('Accuracy of the model on the test images: {} %'.format(100 * correct / total))

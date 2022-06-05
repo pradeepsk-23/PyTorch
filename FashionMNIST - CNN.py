@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torchvision
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 
@@ -13,42 +12,50 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # CIFAR10 dataset (images and labels)
 train_dataset = FashionMNIST(root='Data/FashionMNIST', train=True, transform=transforms.ToTensor(), download=True)
 
-test_dataset = FashionMNIST(root='Data/FashionMNIST', train=False, transform=transforms.ToTensor(), download=True)
+test_dataset = FashionMNIST(root='Data/FashionMNIST', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100
 train_dl = DataLoader(train_dataset, batch_size, shuffle=True)
 test_dl = DataLoader(test_dataset, batch_size)
 
-# Fully connected neural network with one hidden layer
-output_size = 10
-
+# Convolutional neural network (two convolutional layers)
 class ConvNet(nn.Module):
-    def __init__(self, output_size):
+    def __init__(self):
         super(ConvNet, self).__init__()
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=5, stride=1, padding=2),
-            # Output pixel = {[Input Size(32 in this case) - K(Kernel) + 2P(Padding)] / S(Stride)} + 1. Default Stride=1, Padding=0.
-            # out = [16, 28, 28]
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)) # out = [16, 14, 14]
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=5, stride=1, padding=2), # out = [32, 14, 14]
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)) # out = [32, 7, 7]
-        self.fc = nn.Linear(7*7*32, output_size)
+        self.network = nn.Sequential(
+        nn.Conv2d(1, 16, kernel_size=3, padding=1), # Default stride=1, padding=0.
+        # Output pixel = {[Input Size(28 in this case) - K(Kernel) + 2P(Padding)] / S(Stride)} + 1. Default Stride=1, Padding=0.
+        # out = [16, 28, 28]
+        nn.ReLU(),
+        nn.Conv2d(16, 32, kernel_size=3, padding=1), # out = [32, 28, 28]
+        nn.ReLU(),
+        nn.MaxPool2d(2, 2), # out = [32, 14, 14]
+
+        nn.Conv2d(32, 64, kernel_size=3, padding=1), # out = [64, 14, 14]
+        nn.ReLU(),
+        nn.Conv2d(64, 128, kernel_size=3, padding=2), # out = [128, 16, 16]
+        nn.ReLU(),
+        nn.MaxPool2d(2, 2), # out = [128, 8, 8]
+
+        nn.Conv2d(128, 256, kernel_size=3, padding=1), # out = [256, 8, 8]
+        nn.ReLU(),
+        nn.Conv2d(256, 512, kernel_size=3, padding=1), # out = [512, 8, 8]
+        nn.ReLU(),
+        nn.MaxPool2d(2, 2), # out = [512, 4, 4],
+
+        nn.Flatten(), 
+        nn.Linear(512*4*4, 1024),
+        nn.ReLU(),
+        nn.Linear(1024, 512),
+        nn.ReLU(),
+        nn.Linear(512, 10))
     
     def forward(self, x):
-        out = self.layer1(x)
-        out = self.layer2(out)
-        out = out.reshape(out.size(0), -1)
-        out = self.fc(out)
-        return out
+        return self.network(x)
 
 # Model
-model = ConvNet(output_size).to(device)
+model = ConvNet().to(device)
 
 # Loss and optimizer
 # F.cross_entropy computes softmax internally

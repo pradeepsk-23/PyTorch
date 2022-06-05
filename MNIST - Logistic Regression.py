@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 # MNIST dataset (images and labels)
 train_dataset = MNIST(root='data/MNIST', train=True, transform=transforms.ToTensor(), download=True)
 
-test_dataset = MNIST(root='data/MNIST', train=False, transform=transforms.ToTensor(), download=True)
+test_dataset = MNIST(root='data/MNIST', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100

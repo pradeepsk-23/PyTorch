@@ -10,9 +10,9 @@ from torch.utils.data import DataLoader
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # MNIST dataset (images and labels)
-train_dataset = MNIST(root='data/MNIST', train=True, transform=transforms.ToTensor(), download=True)
+train_dataset = MNIST(root='Data/MNIST', train=True, transform=transforms.ToTensor(), download=True)
 
-test_dataset = MNIST(root='data/MNIST', train=False, transform=transforms.ToTensor(), download=True)
+test_dataset = MNIST(root='Data/MNIST', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100
@@ -27,15 +27,13 @@ output_size = 10 # number of classes
 class NeuralNet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(NeuralNet, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size) 
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_size, output_size)  
+        self.network = nn.Sequential(
+        nn.Linear(input_size, hidden_size), 
+        nn.ReLU(),
+        nn.Linear(hidden_size, output_size))  
     
     def forward(self, x):
-        out = self.fc1(x)
-        out = self.relu(out)
-        out = self.fc2(out)
-        return out
+        return self.network(x)
 
 # Model
 model = NeuralNet(input_size, hidden_size, output_size).to(device)
