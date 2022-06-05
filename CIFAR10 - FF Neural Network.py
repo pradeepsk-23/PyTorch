@@ -10,9 +10,9 @@ from torch.utils.data import DataLoader
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # CIFAR10 dataset (images and labels)
-train_dataset = CIFAR10(root='Data/CIFAR10', train=True, transform=transforms.ToTensor(), download=True)
+train_dataset = CIFAR10(root='./Dataset/CIFAR10', train=True, transform=transforms.ToTensor(), download=True)
 
-test_dataset = CIFAR10(root='Data/CIFAR10', train=False, transform=transforms.ToTensor())
+test_dataset = CIFAR10(root='./Dataset/CIFAR10', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100

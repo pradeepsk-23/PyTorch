@@ -10,16 +10,16 @@ from torch.utils.data import DataLoader
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # CIFAR10 dataset (images and labels)
-train_dataset = CIFAR10(root='Data/CIFAR10', train=True, transform=transforms.ToTensor(), download=True)
+train_dataset = CIFAR10(root='./Dataset/CIFAR10', train=True, transform=transforms.ToTensor(), download=True)
 
-test_dataset = CIFAR10(root='Data/CIFAR10', train=False, transform=transforms.ToTensor())
+test_dataset = CIFAR10(root='./Dataset/CIFAR10', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100
 train_dl = DataLoader(train_dataset, batch_size, shuffle=True)
 test_dl = DataLoader(test_dataset, batch_size)
 
-# Convolutional neural network (6 convolutional layers)
+# Convolutional neural network
 class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()

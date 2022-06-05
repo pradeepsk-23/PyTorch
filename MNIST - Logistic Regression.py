@@ -7,9 +7,9 @@ from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 
 # MNIST dataset (images and labels)
-train_dataset = MNIST(root='data/MNIST', train=True, transform=transforms.ToTensor(), download=True)
+train_dataset = MNIST(root='./Dataset/MNIST', train=True, transform=transforms.ToTensor(), download=True)
 
-test_dataset = MNIST(root='data/MNIST', train=False, transform=transforms.ToTensor())
+test_dataset = MNIST(root='./Dataset/MNIST', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100
@@ -60,6 +60,3 @@ with torch.no_grad():
         correct += (predicted == labels).sum()
 
     print('Accuracy of the model on the test images: {} %'.format(100 * correct / total))
-
-# Save the model checkpoint
-torch.save(model.state_dict(), 'mnist_lr.ckpt')

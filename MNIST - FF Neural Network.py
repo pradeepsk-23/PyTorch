@@ -10,9 +10,9 @@ from torch.utils.data import DataLoader
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # MNIST dataset (images and labels)
-train_dataset = MNIST(root='Data/MNIST', train=True, transform=transforms.ToTensor(), download=True)
+train_dataset = MNIST(root='./Dataset/MNIST', train=True, transform=transforms.ToTensor(), download=True)
 
-test_dataset = MNIST(root='Data/MNIST', train=False, transform=transforms.ToTensor())
+test_dataset = MNIST(root='./Dataset/MNIST', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100
@@ -80,6 +80,3 @@ with torch.no_grad():
         correct += (predicted == labels).sum().item()
 
     print('Accuracy of the model on the test images: {} %'.format(100 * correct / total))
-
-# Save the model checkpoint
-torch.save(model.state_dict(), 'mnist_ffnn.ckpt')
