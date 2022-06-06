@@ -18,9 +18,9 @@ transform = transforms.Compose([transforms.RandomCrop(size=32, padding=4, paddin
                                 transforms.ToTensor()])
 
 # CIFAR10 dataset (images and labels)
-train_dataset = CIFAR10(root='Data/CIFAR10_Augmented', train=True, transform=transform, download=True)
+train_dataset = CIFAR10(root='./Dataset/CIFAR10_Augmented', train=True, transform=transform, download=True)
 
-test_dataset = CIFAR10(root='Data/CIFAR10', train=False, transform=transforms.ToTensor())
+test_dataset = CIFAR10(root='./Dataset/CIFAR10', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
 batch_size = 100
@@ -58,14 +58,14 @@ class ResNet9(nn.Module):
                                         nn.Linear(512*1*1, num_classes))
     
     def forward(self, x):
-        out = self.conv1(x)
-        out = self.conv2(out)
-        out = self.res1(out) + out
-        out = self.conv3(out)
-        out = self.conv4(out)
-        out = self.res2(out) + out
-        out = self.classifier(out)
-        return out
+        out1 = self.conv1(x)
+        out2 = self.conv2(out1)
+        out3 = self.res1(out2) + out2
+        out4 = self.conv3(out3)
+        out5 = self.conv4(out4)
+        out6 = self.res2(out5) + out5
+        out7 = self.classifier(out6)
+        return out7
 
 # Model
 model = ResNet9(in_channels, num_classes).to(device)
@@ -73,12 +73,14 @@ model = ResNet9(in_channels, num_classes).to(device)
 # Loss and optimizer
 # F.cross_entropy computes softmax internally
 loss_fn = F.cross_entropy
-opt = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=0.1)
+opt = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-4)
+
+# Set up one-cycle learning rate scheduler
+epochs = 8
+sched = torch.optim.lr_scheduler.OneCycleLR(opt, 1e-2, epochs=epochs, steps_per_epoch=len(train_dl))
 
 # Train the model
-epochs = 5
-total_step = len(train_dl)  
-curr_lr = 1e-3
+total_step = len(train_dl)
 for epoch in range(epochs):
     for i, (images, labels) in enumerate(train_dl):
         images = images.to(device)
@@ -92,10 +94,12 @@ for epoch in range(epochs):
         opt.zero_grad()
         loss.backward()
         opt.step()
-        
-        if (i+1) % 500 == 0:
-            print ("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}"
-                   .format(epoch+1, epochs, i+1, total_step, loss.item()))
+
+    sched.step()
+ 
+    if (i+1) % 500 == 0:
+        print ("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}"
+                .format(epoch+1, epochs, i+1, total_step, loss.item()))
 
 # Test the model
 model.eval()          # Turns off dropout and batchnorm layers for testing / validation.
