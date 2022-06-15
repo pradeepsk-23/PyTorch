@@ -20,42 +20,39 @@ train_dl = DataLoader(train_dataset, batch_size, shuffle=True)
 test_dl = DataLoader(test_dataset, batch_size)
 
 # Convolutional neural network
+num_classes = 10
 class ConvNet(nn.Module):
-    def __init__(self):
-        super(ConvNet, self).__init__()
-        self.network = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, padding=1), # Default stride=1, padding=0.
-            nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2),
-            # Output pixel = {[Input Size(32 in this case) - K(Kernel) + 2P(Padding)] / S(Stride)} + 1.
-            # output: 64 x 16 x 16
-
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(128, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2), # output: 128 x 8 x 8
-
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2, 2), # output: 256 x 4 x 4
-
-            nn.Flatten(), 
-            nn.Linear(256*4*4, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, 512),
-            nn.ReLU(),
-            nn.Linear(512, 10))
+    def __init__(self, num_classes):
+        super().__init__()
+        self.layer1 = nn.Sequential(nn.Conv2d(3, 32, kernel_size=5, stride=1, padding=2),
+                                    nn.BatchNorm2d(32),
+                                    nn.ReLU(),
+                                    nn.MaxPool2d(kernel_size=2, stride=2))
+        self.layer2 = nn.Sequential(nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
+                                    nn.BatchNorm2d(64),
+                                    nn.ReLU(),
+                                    nn.MaxPool2d(kernel_size=2, stride=2))
+        self.layer3 = nn.Sequential(nn.Conv2d(64, 128, kernel_size=5, stride=1, padding=2),
+                                    nn.BatchNorm2d(128),
+                                    nn.ReLU(),
+                                    nn.MaxPool2d(kernel_size=2, stride=2))
+        self.layer4 = nn.Sequential(nn.Conv2d(128, 256, kernel_size=5, stride=1, padding=2),
+                                    nn.BatchNorm2d(256),
+                                    nn.ReLU(),
+                                    nn.MaxPool2d(kernel_size=2, stride=2))
+        self.fc = nn.Linear(256*2*2, num_classes)
         
-    def forward(self, xb):
-        return self.network(xb)            
+    def forward(self, x):
+        out1 = self.layer1(x)
+        out2 = self.layer2(out1)
+        out3 = self.layer3(out2)
+        out4 = self.layer4(out3)
+        out5 = out4.reshape(out4.size(0), -1)
+        out6 = self.fc(out5)
+        return out6            
 
 # Model
-model = ConvNet().to(device)
+model = ConvNet(num_classes).to(device)
 
 # Loss and optimizer
 # F.cross_entropy computes softmax internally

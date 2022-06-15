@@ -78,6 +78,3 @@ for epoch in range(epochs):
     
         if (epoch+1) % 100 == 0:
             print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, epochs, loss.item()))
-
-# Save the model checkpoint
-torch.save(model.state_dict(), 'cyp_bi.ckpt')

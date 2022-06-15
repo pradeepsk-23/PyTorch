@@ -22,7 +22,7 @@ test_dl = DataLoader(test_dataset, batch_size)
 # Convolutional neural network
 class ConvNet(nn.Module):
     def __init__(self):
-        super(ConvNet, self).__init__()
+        super().__init__()
         self.network = nn.Sequential(
         nn.Conv2d(1, 16, kernel_size=3, padding=1), # Default stride=1, padding=0.
         # Output pixel = {[Input Size(28 in this case) - K(Kernel) + 2P(Padding)] / S(Stride)} + 1. Default Stride=1, Padding=0.

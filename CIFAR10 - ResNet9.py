@@ -76,7 +76,7 @@ loss_fn = F.cross_entropy
 opt = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-4)
 
 # Set up one-cycle learning rate scheduler
-epochs = 8
+epochs = 5
 sched = torch.optim.lr_scheduler.OneCycleLR(opt, 1e-2, epochs=epochs, steps_per_epoch=len(train_dl))
 
 # Train the model
