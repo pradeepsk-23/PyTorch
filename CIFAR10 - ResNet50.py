@@ -23,7 +23,7 @@ train_dataset = CIFAR10(root='./Dataset/CIFAR10_Augmented', train=True, transfor
 test_dataset = CIFAR10(root='./Dataset/CIFAR10', train=False, transform=transforms.ToTensor())
 
 # DataLoader (input pipeline)
-batch_size = 100
+batch_size = 400
 train_dl = DataLoader(train_dataset, batch_size, shuffle=True)
 test_dl = DataLoader(test_dataset, batch_size)
 

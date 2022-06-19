@@ -10,20 +10,21 @@ from torch.utils.data import DataLoader
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Image preprocessing modules
-transform = transforms.Compose([transforms.RandomCrop(size=32, padding=4, padding_mode="reflect"),
-                                transforms.RandomHorizontalFlip(),
-                                transforms.RandomPerspective(),
-                                transforms.RandomResizedCrop(size=32, scale=(0.5, 0.9), ratio=(1, 1)),
-                                transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),
-                                transforms.ToTensor()])
+stats = ((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+transform_train = transforms.Compose([transforms.RandomCrop(size=32, padding=4, padding_mode="reflect"),
+                                      transforms.RandomHorizontalFlip(),
+                                      transforms.ToTensor(),
+                                      transforms.Normalize(*stats,inplace=True)])
+transform_test = transforms.Compose([transforms.ToTensor(),
+                                     transforms.Normalize(*stats)])
 
 # CIFAR10 dataset (images and labels)
-train_dataset = CIFAR10(root='./Dataset/CIFAR10_Augmented', train=True, transform=transform, download=True)
+train_dataset = CIFAR10(root='./Dataset/CIFAR10_Augmented', train=True, transform=transform_train, download=True)
 
-test_dataset = CIFAR10(root='./Dataset/CIFAR10', train=False, transform=transforms.ToTensor())
+test_dataset = CIFAR10(root='./Dataset/CIFAR10', train=False, transform=transform_test)
 
 # DataLoader (input pipeline)
-batch_size = 100
+batch_size = 400
 train_dl = DataLoader(train_dataset, batch_size, shuffle=True)
 test_dl = DataLoader(test_dataset, batch_size)
 
@@ -76,12 +77,20 @@ loss_fn = F.cross_entropy
 opt = torch.optim.Adam(model.parameters(), lr=1e-2, weight_decay=1e-4)
 
 # Set up one-cycle learning rate scheduler
-epochs = 5
+epochs = 8
+grad_clip = 0.1
+
+# For updating learning rate
+def update_lr(opt):
+    for param_group in opt.param_groups:
+        return param_group['lr']
+
 sched = torch.optim.lr_scheduler.OneCycleLR(opt, 1e-2, epochs=epochs, steps_per_epoch=len(train_dl))
 
 # Train the model
 total_step = len(train_dl)
 for epoch in range(epochs):
+    lrs = []
     for i, (images, labels) in enumerate(train_dl):
         images = images.to(device)
         labels = labels.to(device)
@@ -93,9 +102,16 @@ for epoch in range(epochs):
         # Backward and optimize
         opt.zero_grad()
         loss.backward()
+
+        # Gradient clipping
+        if grad_clip: 
+            nn.utils.clip_grad_value_(model.parameters(), grad_clip)
+
         opt.step()
 
-    sched.step()
+        # Record & update learning rate
+        lrs.append(update_lr(opt))
+        sched.step()
  
     if (i+1) % 500 == 0:
         print ("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}"
