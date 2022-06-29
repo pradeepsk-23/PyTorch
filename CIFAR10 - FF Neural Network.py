@@ -16,26 +16,29 @@ test_dataset = CIFAR10(root='./Dataset/CIFAR10', train=False, transform=transfor
 
 # DataLoader (input pipeline)
 batch_size = 100
-train_dl = DataLoader(train_dataset, batch_size, shuffle=True)
-test_dl = DataLoader(test_dataset, batch_size)
+train_dl = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=4, pin_memory=True)
+test_dl = DataLoader(test_dataset, batch_size, num_workers=4, pin_memory=True)
 
 # Fully connected neural network with one hidden layer
 input_size = 3*32*32
-hidden_size = 1536
 output_size = 10
 
 class NeuralNet(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size, output_size):
         super().__init__()
-        self.network = nn.Sequential(nn.Linear(input_size, hidden_size),
+        self.network = nn.Sequential(nn.Linear(input_size, 512),
                                      nn.ReLU(),
-                                     nn.Linear(hidden_size, output_size))        
+                                     nn.Linear(512, 256),
+                                     nn.ReLU(),
+                                     nn.Linear(256, 128),
+                                     nn.ReLU(),
+                                     nn.Linear(128, output_size))        
     
     def forward(self, x):
         return self.network(x)
 
 # Model
-model = NeuralNet(input_size, hidden_size, output_size).to(device)
+model = NeuralNet(input_size, output_size).to(device)
 
 # Loss and optimizer
 # F.cross_entropy computes softmax internally
