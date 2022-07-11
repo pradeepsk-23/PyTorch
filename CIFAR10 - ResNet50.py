@@ -119,10 +119,10 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
 # Model
-model = ResNet(block, [3, 4, 6, 3], 3, 1000) # ResNet50
+model = ResNet(block, [3, 4, 6, 3], 3, 1000).to(device) # ResNet50
 
-# model = ResNet(block, [3, 4, 23, 3], 3, 1000) Resnet101
-# model = ResNet(block, [3, 8, 36, 3], 3, 1000) Resnet152
+# model = ResNet(block, [3, 4, 23, 3], 3, 1000).to(device) Resnet101
+# model = ResNet(block, [3, 8, 36, 3], 3, 1000).to(device) Resnet152
 
 # Loss and optimizer
 # F.cross_entropy computes softmax internally
